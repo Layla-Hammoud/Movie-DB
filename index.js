@@ -1,14 +1,21 @@
 const express = require("express");
 const app = express();
 
+const movies = [
+  { title: "Jaws", year: 1975, rating: 8 },
+  { title: "Avatar", year: 2009, rating: 7.8 },
+  { title: "Brazil", year: 1985, rating: 8 },
+  { title: "الإرهاب والكباب", year: 1992, rating: 6.2 },
+];
+
 const currentDate = new Date();
 
 app.get("/test", (request, response) => {
-  response.send({ status: 200, message: "ok" });
+  response.json({ status: 200, message: "ok" });
 });
 
 app.get("/time", (request, response) => {
-  response.send({
+  response.json({
     status: 200,
     message: `${currentDate.getHours()}:${currentDate.getMinutes()}`,
   });
@@ -20,21 +27,37 @@ app.get("/", (request, response) => {
 
 app.get("/hello/:id?", (request, response) => {
   let id = request.params.id;
-  if(id){
-    response.status(200).json( {status:200, message:`Hello,${id}`})
-  }
-  else{
-    response.status(200).json({message:"Hello!"})
+  if (id) {
+    response.status(200).json({ status: 200, message: `Hello,${id}` });
+  } else {
+    response.status(200).json({ message: "Hello!" });
   }
 });
 
 app.get("/search", (request, response) => {
   let searchData = request.query.s;
-  if(searchData){
-    response.json({status:200, message:"ok", data:searchData});
-  }else{
-    response.status(500).json({status:500, error:true, message:"you have to provide a search"})
+  if (searchData) {
+    response.status(200).json({ status: 200, message: "ok", data: searchData });
+  } else {
+    response.status(500).json({
+      status: 500,
+      error: true,
+      message: "you have to provide a search",
+    });
   }
+});
+
+app.get("/movies/create", (request, response) => {
+  response.status(200).json({ message: "create a movie" });
+});
+app.get("/movies/read", (request, response) => {
+  response.status(200).json( {status:200, data:movies } );
+});
+app.get("/movies/update", (request, response) => {
+  response.status(200).json({ message: "update a movie" });
+});
+app.get("/movies/delete", (request, response) => {
+  response.status(200).json({ message: "delete a movie" });
 });
 
 app.listen(3000, (request, response) => {
