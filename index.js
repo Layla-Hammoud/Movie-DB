@@ -19,7 +19,13 @@ app.get("/", (request, response) => {
 });
 
 app.get("/hello/:id?", (request, response) => {
-  response.json(request.params.id ? `Hello ${request.params.id}!` : `Hello!`);
+  let id = request.params.id;
+  if(id){
+    response.status(200).json( {status:200, message:`Hello,${id}`})
+  }
+  else{
+    response.status(200).json({message:"Hello!"})
+  }
 });
 
 app.get("/search", (request, response) => {
