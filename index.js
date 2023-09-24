@@ -47,8 +47,28 @@ app.get("/search", (request, response) => {
   }
 });
 
-app.get("/movies/create", (request, response) => {
-  response.status(200).json({ message: "create a movie" });
+app.get("/movies/add", (request, response) => {
+  const { title, year, rating } = request.query;
+  if (!title || !year) {
+    response.status(403).json({
+      status: 403,
+      error: true,
+      message: "you cannot create a movie without providing a title and a year",
+    });
+  } else if (year.length !== 4 || Number.isNaN(parseInt(year))) {
+    response.status(403).json({
+      status: 403,
+      error: true,
+      message: "you cannot create a movie without providing a title and a year",
+    });
+  } else {
+    let rate;
+    if (!rating) {
+      rate = "4";
+    }
+    movies.push({ title: title, year: year, rating: rate });
+    response.status(200).json({movies});
+  }
 });
 
 app.get("/movies/read/:order?", (request, response) => {
@@ -67,20 +87,24 @@ app.get("/movies/read/:order?", (request, response) => {
     response.status(200).json({ status: 200, data: sortedMovies });
   }
 });
+app.get("/movies/read/id/:id", (request, response) => {
+  let id = request.params.id - 1; // if the id is 1 we will sent the first movies in the array
+  if (id < 0 || id > movies.length - 1) {
+    response.status(404).send({
+      status: 404,
+      error: true,
+      message: `the movie ${id + 1} does not exist`,
+    });
+  } else {
+    response.status(200).json({ status: 200, data: movies[id] });
+  }
+});
 app.get("/movies/update", (request, response) => {
   response.status(200).json({ message: "update a movie" });
 });
 app.get("/movies/delete", (request, response) => {
   response.status(200).json({ message: "delete a movie" });
 });
-app.get("/movies/read/id/:id",(request,response)=>{
-  let id = request.params.id - 1; // if the id is 1 we will sent the first movies in the array
-  if(id < 0 || id > movies.length-1){
-    response.status(404).send({status:404, error:true, message:`the movie ${id + 1} does not exist`})
-  }else{
-    response.status(200).json({status:200, data:movies[id]})
-  }
-})
 
 app.listen(3000, (request, response) => {
   console.log(`the server is running on port 3000`);
