@@ -52,22 +52,20 @@ app.get("/movies/create", (request, response) => {
 });
 
 app.get("/movies/read/:order?", (request, response) => {
-    if(!request.params.order){
-        response.status(200).json( {status:200, data:movies } );
-    }
-    else if(request.params.order == "by-date"){
-        sortedMovies = [...movies].sort((old, neww) => old.year - neww.year);
-        response.status(200).json( {status:200, data:sortedMovies } );
-    }
-    else if(request.params.order == "by-rating"){
-        sortedMovies = [...movies].sort((old, neww) => old.rating - neww.rating);
-        response.status(200).json( {status:200, data:sortedMovies } );
-    }else if(request.params.order == "by-title"){
-        sortedMovies = [...movies].sort((first,last)=>first.title.localeCompare(last.title))
-        response.status(200).json( {status:200, data:sortedMovies } );
-    }
-
-
+  if (!request.params.order) {
+    response.status(200).json({ status: 200, data: movies });
+  } else if (request.params.order == "by-date") {
+    sortedMovies = [...movies].sort((old, neww) => old.year - neww.year);
+    response.status(200).json({ status: 200, data: sortedMovies });
+  } else if (request.params.order == "by-rating") {
+    sortedMovies = [...movies].sort((old, neww) => old.rating - neww.rating);
+    response.status(200).json({ status: 200, data: sortedMovies });
+  } else if (request.params.order == "by-title") {
+    sortedMovies = [...movies].sort((first, last) =>
+      first.title.localeCompare(last.title)
+    );
+    response.status(200).json({ status: 200, data: sortedMovies });
+  }
 });
 app.get("/movies/update", (request, response) => {
   response.status(200).json({ message: "update a movie" });
@@ -75,6 +73,14 @@ app.get("/movies/update", (request, response) => {
 app.get("/movies/delete", (request, response) => {
   response.status(200).json({ message: "delete a movie" });
 });
+app.get("/movies/read/id/:id",(request,response)=>{
+  let id = request.params.id - 1; // if the id is 1 we will sent the first movies in the array
+  if(id < 0 || id > movies.length-1){
+    response.status(404).send({status:404, error:true, message:`the movie ${id + 1} does not exist`})
+  }else{
+    response.status(200).json({status:200, data:movies[id]})
+  }
+})
 
 app.listen(3000, (request, response) => {
   console.log(`the server is running on port 3000`);
