@@ -99,19 +99,38 @@ app.get("/movies/read/id/:id", (request, response) => {
     response.status(200).json({ status: 200, data: movies[id] });
   }
 });
-app.get("/movies/update", (request, response) => {
-  response.status(200).json({ message: "update a movie" });
+app.get("/movies/update/:id", (request, response) => {
+  const id = parseInt(request.params.id) - 1;
+  const newTitle = request.query.title;
+  const newYear = parseInt(request.query.year);
+  const newRate = parseInt(request.query.rating);
+  if (movies[id] === undefined) {
+    response.status(404).send({
+      status: 404,
+      error: true,
+      message: `the movie ${id + 1} does not exist`,
+    });
+  }
+    if(newTitle!=undefined){
+      movies[id].title = newTitle;
+    }
+    if(!Number.isNaN(newYear)){
+      movies[id].year = newYear;
+    }
+    if(!Number.isNaN(newRate)){
+      movies[id].rating = newRate;
+    }
+    response.status(200).send({ status: 200, data: movies })
 });
+
 app.get("/movies/delete/:id", (request, response) => {
   const id = request.params.id - 1;
   if (id < 0 || id > movies.length - 1) {
-    response
-      .status(404)
-      .json({
-        status: 404,
-        error: true,
-        message: `the movie ${id + 1} does not exist`,
-      });
+    response.status(404).json({
+      status: 404,
+      error: true,
+      message: `the movie ${id + 1} does not exist`,
+    });
   } else {
     movies.splice(id, 1);
     response.status(200).json({ status: 200, data: movies });
