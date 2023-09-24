@@ -67,7 +67,7 @@ app.get("/movies/add", (request, response) => {
       rate = "4";
     }
     movies.push({ title: title, year: year, rating: rate });
-    response.status(200).json({movies});
+    response.status(200).json({ movies });
   }
 });
 
@@ -102,8 +102,20 @@ app.get("/movies/read/id/:id", (request, response) => {
 app.get("/movies/update", (request, response) => {
   response.status(200).json({ message: "update a movie" });
 });
-app.get("/movies/delete", (request, response) => {
-  response.status(200).json({ message: "delete a movie" });
+app.get("/movies/delete/:id", (request, response) => {
+  const id = request.params.id - 1;
+  if (id < 0 || id > movies.length - 1) {
+    response
+      .status(404)
+      .json({
+        status: 404,
+        error: true,
+        message: `the movie ${id + 1} does not exist`,
+      });
+  } else {
+    movies.splice(id, 1);
+    response.status(200).json({ status: 200, data: movies });
+  }
 });
 
 app.listen(3000, (request, response) => {
