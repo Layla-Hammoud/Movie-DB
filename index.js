@@ -47,7 +47,7 @@ app.get("/search", (request, response) => {
   }
 });
 
-app.get("/movies/add", (request, response) => {
+app.post("/movies/add", (request, response) => {
   const { title, year, rating } = request.query;
   if (!title || !year) {
     response.status(403).json({
@@ -99,7 +99,7 @@ app.get("/movies/read/id/:id", (request, response) => {
     response.status(200).json({ status: 200, data: movies[id] });
   }
 });
-app.get("/movies/update/:id", (request, response) => {
+app.put("/movies/update/:id", (request, response) => {
   const id = parseInt(request.params.id) - 1;
   const newTitle = request.query.title;
   const newYear = parseInt(request.query.year);
@@ -111,7 +111,7 @@ app.get("/movies/update/:id", (request, response) => {
       message: `the movie ${id + 1} does not exist`,
     });
   }
-    if(newTitle!=undefined){
+    if(newTitle!==undefined){
       movies[id].title = newTitle;
     }
     if(!Number.isNaN(newYear)){
@@ -123,7 +123,7 @@ app.get("/movies/update/:id", (request, response) => {
     response.status(200).send({ status: 200, data: movies })
 });
 
-app.get("/movies/delete/:id", (request, response) => {
+app.delete("/movies/delete/:id", (request, response) => {
   const id = request.params.id - 1;
   if (id < 0 || id > movies.length - 1) {
     response.status(404).json({
