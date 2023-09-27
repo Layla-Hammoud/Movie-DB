@@ -1,12 +1,8 @@
 const express = require("express");
+const mongoose = require("mongoose");
+require("dotenv").config();
 const app = express();
-
-const movies = [
-  { title: "Jaws", year: 1975, rating: 8 },
-  { title: "Avatar", year: 2009, rating: 7.8 },
-  { title: "Brazil", year: 1985, rating: 8 },
-  { title: "الإرهاب والكباب", year: 1992, rating: 6.2 },
-];
+const movieModel = require("./model/movie");
 
 const currentDate = new Date();
 
@@ -34,109 +30,99 @@ app.get("/hello/:id?", (request, response) => {
   }
 });
 
-app.get("/search", (request, response) => {
-  let searchData = request.query.s;
-  if (searchData) {
-    response.status(200).json({ status: 200, message: "ok", data: searchData });
-  } else {
-    response.status(500).json({
-      status: 500,
-      error: true,
-      message: "you have to provide a search",
-    });
-  }
-});
-
-app.post("/movies/add", (request, response) => {
+app.post("/movies/add", async (request, response) => {
   const { title, year, rating } = request.query;
-  if (!title || !year) {
+  try {
+    const newMovie = await movieModel.create({ title, year, rating });
+    response.status(200).json(newMovie);
+  } catch (error) {
     response.status(403).json({
       status: 403,
       error: true,
-      message: "you cannot create a movie without providing a title and a year",
+      message: error.message,
     });
-  } else if (year.length !== 4 || Number.isNaN(parseInt(year))) {
-    response.status(403).json({
-      status: 403,
-      error: true,
-      message: "you cannot create a movie without providing a title and a year",
-    });
-  } else {
-    let rate;
-    if (!rating) {
-      rate = "4";
-    }
-    movies.push({ title: title, year: year, rating: rate });
-    response.status(200).json({ movies });
   }
 });
 
-app.get("/movies/read/:order?", (request, response) => {
-  if (!request.params.order) {
-    response.status(200).json({ status: 200, data: movies });
-  } else if (request.params.order == "by-date") {
-    sortedMovies = [...movies].sort((old, neww) => old.year - neww.year);
+app.get("/movies/read/:order?", async (request, response) => {
+  const movies = await movieModel.find();
+  if (request.params.order == "by-date") {
+    const sortedMovies = [...movies].sort((old, neww) => old.year - neww.year);
     response.status(200).json({ status: 200, data: sortedMovies });
   } else if (request.params.order == "by-rating") {
-    sortedMovies = [...movies].sort((old, neww) => old.rating - neww.rating);
+    const sortedMovies = [...movies].sort(
+      (old, neww) => old.rating - neww.rating
+    );
     response.status(200).json({ status: 200, data: sortedMovies });
   } else if (request.params.order == "by-title") {
-    sortedMovies = [...movies].sort((first, last) =>
+    const sortedMovies = [...movies].sort((first, last) =>
       first.title.localeCompare(last.title)
     );
     response.status(200).json({ status: 200, data: sortedMovies });
-  }
-});
-app.get("/movies/read/id/:id", (request, response) => {
-  let id = request.params.id - 1; // if the id is 1 we will sent the first movies in the array
-  if (id < 0 || id > movies.length - 1) {
-    response.status(404).send({
-      status: 404,
-      error: true,
-      message: `the movie ${id + 1} does not exist`,
-    });
   } else {
-    response.status(200).json({ status: 200, data: movies[id] });
-  }
-});
-app.put("/movies/update/:id", (request, response) => {
-  const id = parseInt(request.params.id) - 1;
-  const newTitle = request.query.title;
-  const newYear = parseInt(request.query.year);
-  const newRate = parseInt(request.query.rating);
-  if (movies[id] === undefined) {
-    response.status(404).send({
-      status: 404,
-      error: true,
-      message: `the movie ${id + 1} does not exist`,
-    });
-  }
-    if(newTitle!==undefined){
-      movies[id].title = newTitle;
-    }
-    if(!Number.isNaN(newYear)){
-      movies[id].year = newYear;
-    }
-    if(!Number.isNaN(newRate)){
-      movies[id].rating = newRate;
-    }
-    response.status(200).send({ status: 200, data: movies })
-});
-
-app.delete("/movies/delete/:id", (request, response) => {
-  const id = request.params.id - 1;
-  if (id < 0 || id > movies.length - 1) {
-    response.status(404).json({
-      status: 404,
-      error: true,
-      message: `the movie ${id + 1} does not exist`,
-    });
-  } else {
-    movies.splice(id, 1);
     response.status(200).json({ status: 200, data: movies });
   }
 });
-
-app.listen(3000, (request, response) => {
-  console.log(`the server is running on port 3000`);
+app.get("/movies/read/id/:id", async (request, response) => {
+  const id = request.params.id;
+  let movie;
+  try {
+    movie = await movieModel.findById(id);
+    if (!movie) {
+      throw new Error();
+    }
+    response.status(200).json({ status: 200, data: movie });
+  } catch (error) {
+    response.status(404).send({
+      status: 404,
+      error: true,
+      message: `the movie does not exist`,
+    });
+  }
 });
+app.put("/movies/update/:id", async (request, response) => {
+  const id = request.params.id;
+  const newTitle = request.query.title;
+  const newYear = request.query.year ? parseInt(request.query.year) : undefined
+  const newRate = request.query.rating? parseInt(request.query.rating) : undefined
+  try {
+    const updatedMovie = await movieModel.updateOne(
+      { _id: id },
+      { title: newTitle, year: newYear, rating: newRate }
+    );
+    response.status(200).send({ status: 200, data: updatedMovie });
+  } catch (error) {
+    response.status(404).send({
+      status: 400,
+      error: true,
+      message: `failed to update the movie`,
+    });
+  }
+});
+
+app.delete("/movies/delete/:id", async (request, response) => {
+  const id = request.params.id;
+  try {
+    const deletedMovie = await movieModel.deleteOne({_id:id})
+    response.status(200).send({ status: 200, data: deletedMovie });
+  } catch (error) {
+    response.status(404).send({
+      status: 400,
+      error: true,
+      message: `failed to delete the movie`,
+    });
+  }
+});
+
+app.use(express.json());
+
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    app.listen(process.env.PORT, (request, response) => {
+      console.log(`Connected to DB the server is running on port 3000`);
+    });
+  })
+  .catch((error) => {
+    console.log(error);
+  });
